@@ -1,44 +1,56 @@
-const Router = require('express').Router;
-const supabase = require('../db/index.js');
-const { capitalize } = require('../helpers/index.js');
+const supabase = require("../db/index.js");
+const { capitalize } = require("../helpers/index.js");
+const router = require("express").Router();
 
-const router = Router();
+router.get("/all", async (req, res) => {
+  const { data: destinations, error } = await supabase
+    .from("destinations")
+    .select("*");
 
-router.get('/all', async (req, res) => {
+  res.send(destinations);
+});
 
-    const {data: destinations, error} = await supabase
-        .from('destinations')
-        .select("*")
+router.get("/:name", async (req, res) => {
+  const { data: destination, error } = await supabase
+    .from("destinations")
+    .select()
+    .eq("name", capitalize(req.params.name));
 
-    res.send(destinations);
-})
+  if (error) {
+    res.send({ error: error });
+  }
+  if (!!destination[0].activities) {
+    const { data: activities } = await supabase
+      .from("activities")
+      .select()
+      .in("id", destination[0].activities);
 
-router.get('/:name', async (req, res) => {
+    destination[0].activities = activities;
+  } else {
+    destination[0].activities = [];
+  }
 
-    const {data: destination, error} = await supabase
-        .from('destinations')
-        .select()
-        .eq("name", capitalize(req.params.name))
+  if (!!destination[0].places) {
+    const { data: places } = await supabase
+      .from("places")
+      .select()
+      .in("id", destination[0].places);
 
-    if(error){
-        res.send({error: error})
-    }
-    
-    const {data: activities} = await supabase
-        .from('activities')
-        .select()
-        .in('id', destination[0].activities)
+    destination[0].places = places;
+  } else {
+    destination[0].places = [];
+  }
 
-    const {data: places} = await supabase
-        .from('places')
-        .select()
-        .in('id', destination[0].places)
+  if (!!destination[0].packages.length ) {
+    const { data: packages } = await supabase
+      .from("packages")
+      .select()
+      .in("id", destination[0].packages);
 
-    destination[0].activities = activities
-    destination[0].places = places
+    destination[0].packages = packages;
+  }
 
-    res.send(destination[0]);
-})
+  res.send(destination[0]);
+});
 
-
-module.exports = router
+module.exports = router;
