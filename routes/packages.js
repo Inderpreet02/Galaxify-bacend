@@ -16,6 +16,7 @@ router.post("/create/new", async (req, res) => {
     Duration: req.body.Duration,
     ActivityIDs: req.body.ActivityIDs,
     Destination: req.body.Destination,
+    DestinationName: req.body.DestinationName,
     ImageUrl: "https://th.bing.com/th/id/OIG._ycLpE.beQuvaF_VjwLt?pid=ImgGn",
   };
   const { data, error } = await supabase.from("packages").insert(obj).select();
@@ -33,6 +34,10 @@ router.get("/:id", async (req, res) => {
     .from("packages")
     .select()
     .eq("id", parseInt(req.params.id));
+
+	if(error){
+		res.send(error)
+	}
 
   if (!!package[0].ActivityIDs) {
     const { data: activities } = await supabase
